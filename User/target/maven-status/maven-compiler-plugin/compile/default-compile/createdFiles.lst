@@ -1,0 +1,11 @@
+recruitSystem\User.class
+recruitSystem\UserController.class
+recruitSystem\UserUpdated.class
+recruitSystem\external\App.class
+recruitSystem\AbstractEvent.class
+recruitSystem\external\AppService.class
+recruitSystem\config\kafka\KafkaProcessor.class
+recruitSystem\UserCreated.class
+recruitSystem\UserRepository.class
+recruitSystem\Application.class
+recruitSystem\PolicyHandler.class
