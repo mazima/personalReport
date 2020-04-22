@@ -1,0 +1,9 @@
+recruitSystem\RecruitUpdated.class
+recruitSystem\AbstractEvent.class
+recruitSystem\RecruitCreated.class
+recruitSystem\config\kafka\KafkaProcessor.class
+recruitSystem\RecruitRepository.class
+recruitSystem\RecruitController.class
+recruitSystem\Application.class
+recruitSystem\PolicyHandler.class
+recruitSystem\Recruit.class
