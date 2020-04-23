@@ -775,6 +775,11 @@ transfer-encoding: chunked
 
 ```
 
+
+이벤트 수신내용
+![image](https://user-images.githubusercontent.com/36656979/80050458-99a7a480-8550-11ea-832a-0b2ea53353e6.png)
+
+
 # CI/CD 실행 결과
 
 https://github.com/suhyoungjoon/syj/issues/1#issue-604295024
