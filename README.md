@@ -782,9 +782,9 @@ transfer-encoding: chunked
 
 # CI/CD 실행 결과
 
-https://github.com/suhyoungjoon/syj/issues/1#issue-604295024
-![CLOUD과제_devops (azure)](https://user-images.githubusercontent.com/61151016/79915233-92ee3400-8461-11ea-9e1f-085e9ef902c6.jpg)
-![CLOUD과제_POD실행화면 (azure)](https://user-images.githubusercontent.com/61151016/79915678-61299d00-8462-11ea-9f65-5272a21405ca.jpg)
+
+
+![image](https://user-images.githubusercontent.com/36656979/80050572-f86d1e00-8550-11ea-8cdc-185e88349fd8.png)
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 # 체크포인트
