@@ -1,6 +1,26 @@
 ## 소스코드
 
-https://drive.google.com/file/d/1Af344MBBXZWvMu0wLjEkL_XNWihfxljW/view?usp=sharing
+ - 유저 정보 서비스
+https://github.com/mazima/User
+
+ - 게이트웨이 서비스
+https://github.com/mazima/gateway
+
+ - 채용공고 서비스
+https://github.com/mazima/Recruit
+
+ - 채용 지원서 서비스
+https://github.com/mazima/App
+
+ - 채용전형 서비스
+https://github.com/mazima/RecruitProcess
+
+ - 채용진행현황 서비스(전형결과 확인 view)
+https://github.com/mazima/RecruitProcessView
+
+ - 채용 단계별 알림 서비스
+https://github.com/mazima/Notice
+
 
 ## MSAEAZ
 http://msaez.io/#/storming/NVaFbcVDMkP3uU83TbQd72J4OqU2/mine/127842a8579e0bf47ac76c514be0032a/-M5UVzjAvALFs-A4fI4M
@@ -18,16 +38,16 @@ http://msaez.io/#/storming/NVaFbcVDMkP3uU83TbQd72J4OqU2/mine/127842a8579e0bf47ac
     - 서브 도메인과 바운디드 컨텍스트의 분리:  각 팀의 KPI 별로 아래와 같이 관심 구현 스토리를 나눠가짐
 
 
-# 예제 - 도서대여
+# 채용 시스템
 
 본 예제는 MSA/DDD/Event Storming/EDA 를 포괄하는 분석/설계/구현/운영 전단계를 커버하도록 구성한 예제입니다.
 이는 클라우드 네이티브 애플리케이션의 개발에 요구되는 체크포인트들을 통과하기 위한 예시 답안을 포함합니다.
-- 체크포인트 : https://workflowy.com/s/assessment-check-po/T5YrzcMewfo4J6LW
+
 
 
 # Table of contents
 
-- [예제 - 도서대여](#---)
+- [채용 시스템](#---)
   - [서비스 시나리오](#서비스-시나리오)
   - [체크포인트](#체크포인트)
   - [분석/설계](#분석설계)
@@ -47,230 +67,139 @@ http://msaez.io/#/storming/NVaFbcVDMkP3uU83TbQd72J4OqU2/mine/127842a8579e0bf47ac
 # 서비스 시나리오
 
 기능적 요구사항
-* 도서상태:  ```01(대여가능)``` ```02(대여중)```
-* 대여상태:  ```01(대여등록)``` ```02(대여중)``` ```03(반납완료)```
-* 예약상태:  ```01(예약등록)``` ```02(예약취소)``` 
+* 유저등록, 유저정보 변경:  ```유저정보 변경 시 지원서 유저정보 자동 변경 Sync```
+* 지원서 등록:  ```지원서 등록 시 자동으로 채용진행, 채용진행HISTORY 테이블에 데이터 생성 Event pub/sub```
+* 채용 결과:  ```채용진행(서류전형,면접전형) 진행 시 채용진행history 테이블 데이터 변경 Event pub/sub```
+ - 유저 등록 kim
+```sh
+http http://52.141.27.38:8080/users/userCreation userName=kim
+ - 유저 등록 lee
+```sh
+http http://52.141.27.38:8080/users/userCreation userName=lee
+```
+ - 유저 등록 song
+```sh
+http http://52.141.27.38:8080/users/userCreation userName=song
+```
+ - 유저 등록 kang
+```sh
+http http://52.141.27.38:8080/users/userCreation userName=kang
+```sh
+http http://52.141.27.38:8080/users
+```
 
-1. 도서관리자가 도서를 등록한다. (도서id,도서명,도서상태=01)
+ - 공고 등록 recruit1
 ```sh
-http http://localhost:8081/book bookName=AAA bookStatus=01
-http http://localhost:8081/book bookName=BBB bookStatus=01
+http http://52.141.27.38:8080/recruits/recruitCreation recruitName=recruit1
 ```
-1. 고객이 도서를 선택하여 예약한다. (예약상태 업데이트 = 01)
+ - 공고 등록 recruit2
 ```sh
-http http://localhost:8082/reservation bookId=1 reservationStatus=01
+http http://52.141.27.38:8080/recruits/recruitCreation recruitName=recruit2
 ```
-1. 예약 후 도서정보 상태를 업데이트 한다. (도서상태 업데이트=02)  
-1. 예약 후 대여정보에 등록된다. (대여상태 업데이트=01)
-1. 고객이 예약한 도서를 대여한다 (대여상태 업데이트=02)
+ - 공고 등록 recruit3
 ```sh
-http PATCH http://localhost:8083/rental/rented id=1 reservationId=1 bookId=1 reservationStatus=02
+http http://52.141.27.38:8080/recruits/recruitCreation recruitName=recruit3
+
+http http://52.141.27.38:8080/recruits
 ```
-1. 고객이 예약을 반납한다. (대여상태 업데이트=03)
+
+ - 공고지원 app 
 ```sh
-http PATCH http://localhost:8083/rental/returned id=1 reservationId=1 bookId=1 reservationStatus=03
+http http://52.141.27.38:8080/apps/appCreation userId=1 userName=kim schoolName=soongsil recruitId=2 recruitName=recruit2
 ```
-1. 반납 후 도서정보를 상태를 업데이트 한다. (도서정보 업데이트=01)
-1. 고객이 예약을 취소한다. (예약상태 업데이트=02)
+ - 공고지원 
 ```sh
-http PATCH http://localhost:8082/reservationupdate bookId=2 reservationStatus=02
+http http://52.141.27.38:8080/apps/appCreation userId=2 userName=lee schoolName=seoul recruitId=2 recruitName=recruit2
+
+http http://52.141.27.38:8080/apps
 ```
-1. 취소 후 도서정보를 상태를 업데이트한다. (도서상태 업데이트=01)
-1. 고객이 예약 및 대여상태를 중간중간 조회한다.
-1. 예약 및 대여상태가 바뀔 때 마다 카톡으로 알림을 보낸다.
-1. 상태정보를 뷰에 로깅한다
+
+ - 채용진행 이력 생성 확인(app  생성시 자동 생성 pub/sub)
+```sh
+http http://52.141.27.38:8080/recruitProcesses
+```
+
+ - 채용진행이력(view) 생성 및 수정 확인(app 생성시 자동 생성 CQRS view 생성)
+```sh
+http http://52.141.27.38:8080/recruitProcessViews
+```
+
+ - 유저정보 수정(유저정보 수정시 지원 이력 테이블 수정)
+```sh
+http PATCH http://52.141.27.38:8080/users/userModify id=1 userName=kim222
+```
+
+ - 유저정보 변경 확인
+```sh
+http http://52.141.27.38:8080/users/1
+```
+
+ - 지원 정보 변경 확인(유저 정보가 변경되면 req/res로 지원서 정보 변경)
+```sh
+http http://52.141.27.38:8080/apps/1
+```
+
+ - 전형 수행(서류합격)
+```sh
+http http://52.141.27.38:8080/recruitProcesses/recruitProcessCreation appId=1 userId=1 recruitId=2 processResult=서류합격
+```
+
+ - 채용진행이력 정보 변경 확인(view)
+```sh
+http http://52.141.27.38:8080/recruitProcessViews
+```
+
 
 비기능적 요구사항
 1. 트랜잭션
-    1. 예약된 도서는 도서정보 상태를 바로 수정하여 예약하여 추가로 예약되어서는 안된다  Sync 호출 
-1. 장애격리
-    1. 예약기능이 되지 않더라도 대여 및 반납은 365일 24시간 받을 수 있어야 한다  Async (event-driven), Eventual Consistency
-    1. 예약시스템이 과중되면 사용자를 잠시동안 받지 않고 예약을 잠시후에 하도록 유도한다  Circuit breaker, fallback
+    1. 유저정보가 변경되면 지원서 테이블의 유저정보도 변경되야 한다.  Sync 호출 
 1. 성능
-    1. 고객이 에약내역 및 대여상태를 my-page(프론트엔드)에서 확인할 수 있어야 한다  CQRS
-    1. 예약 및 대여상태가 바뀔때마다 카톡 등으로 알림을 줄 수 있어야 한다  Event driven
+    1. 채용진행 결과를 view 형태로 실시간 볼 수 있어야 함.  CQRS
+    1. 채용지원, 채용결과 변경 등의 변화가 있을때 카톡 등으로 알림을 줄 수 있어야 한다  Event driven
 
 # 서비스 실행 결과
 ```sh
-(base) C:\Users\SKCC>http http://localhost:8081/books
-HTTP/1.1 200
-Content-Type: application/hal+json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:44:16 GMT
-Transfer-Encoding: chunked
 
-{
-    "_embedded": {
-        "books": []
-    },
-    "_links": {
-        "profile": {
-            "href": "http://localhost:8081/profile/books"
-        },
-        "self": {
-            "href": "http://localhost:8081/books{?page,size,sort}",
-            "templated": true
-        }
-    },
-    "page": {
-        "number": 0,
-        "size": 20,
-        "totalElements": 0,
-        "totalPages": 0
-    }
-}
-
-
-(base) C:\Users\SKCC>http http://localhost:8081/book bookName=Cloud_Intensive_Course bookStatus=01
-HTTP/1.1 200
+(base) D:\>http http://52.141.27.38:8080/users/userCreation userName=kim
+HTTP/1.1 200 OK
 Content-Type: application/json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:45:49 GMT
-Transfer-Encoding: chunked
+Date: Wed, 22 Apr 2020 07:53:25 GMT
+transfer-encoding: chunked
 
 {
-    "bookName": "Cloud_Intensive_Course",
-    "bookStatus": "01",
-    "id": 1
-}
-
-
-(base) C:\Users\SKCC>http http://localhost:8081/book bookName=Data_Structure bookStatus=01
-HTTP/1.1 200
-Content-Type: application/json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:46:19 GMT
-Transfer-Encoding: chunked
-
-{
-    "bookName": "Data_Structure",
-    "bookStatus": "01",
-    "id": 2
-}
-
-
-(base) C:\Users\SKCC>http http://localhost:8081/book bookName=Math bookStatus=01
-HTTP/1.1 200
-Content-Type: application/json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:46:27 GMT
-Transfer-Encoding: chunked
-
-{
-    "bookName": "Math",
-    "bookStatus": "01",
-    "id": 3
-}
-
-
-(base) C:\Users\SKCC>http http://localhost:8081/books
-HTTP/1.1 200
-Content-Type: application/hal+json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:46:33 GMT
-Transfer-Encoding: chunked
-
-{
-    "_embedded": {
-        "books": [
-            {
-                "_links": {
-                    "book": {
-                        "href": "http://localhost:8081/books/1"
-                    },
-                    "self": {
-                        "href": "http://localhost:8081/books/1"
-                    }
-                },
-                "bookName": "Cloud_Intensive_Course",
-                "bookStatus": "01"
-            },
-            {
-                "_links": {
-                    "book": {
-                        "href": "http://localhost:8081/books/2"
-                    },
-                    "self": {
-                        "href": "http://localhost:8081/books/2"
-                    }
-                },
-                "bookName": "Data_Structure",
-                "bookStatus": "01"
-            },
-            {
-                "_links": {
-                    "book": {
-                        "href": "http://localhost:8081/books/3"
-                    },
-                    "self": {
-                        "href": "http://localhost:8081/books/3"
-                    }
-                },
-                "bookName": "Math",
-                "bookStatus": "01"
-            }
-        ]
-    },
-    "_links": {
-        "profile": {
-            "href": "http://localhost:8081/profile/books"
-        },
-        "self": {
-            "href": "http://localhost:8081/books{?page,size,sort}",
-            "templated": true
-        }
-    },
-    "page": {
-        "number": 0,
-        "size": 20,
-        "totalElements": 3,
-        "totalPages": 1
-    }
-}
-
-
-(base) C:\Users\SKCC>http http://localhost:8082/reservation bookId=1 bookName=Cloud_Intensive_Course reservationStatus=01
-HTTP/1.1 200
-Content-Type: application/json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:47:34 GMT
-Transfer-Encoding: chunked
-
-{
-    "bookId": 1,
-    "createDate": null,
     "id": 1,
-    "mType": "reserved",
-    "reservationDate": null,
-    "reservationStatus": "01"
+    "userName": "kim"
 }
 
 
-(base) C:\Users\SKCC>http http://localhost:8083/rentals
-HTTP/1.1 200
+(base) D:\>http http://52.141.27.38:8080/users
+HTTP/1.1 200 OK
 Content-Type: application/hal+json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:47:58 GMT
-Transfer-Encoding: chunked
+Date: Wed, 22 Apr 2020 07:53:30 GMT
+transfer-encoding: chunked
 
 {
     "_embedded": {
-        "rentals": [
+        "users": [
             {
                 "_links": {
-                    "rental": {
-                        "href": "http://localhost:8083/rentals/1"
-                    },
                     "self": {
-                        "href": "http://localhost:8083/rentals/1"
+                        "href": "http://user:8080/users/1"
+                    },
+                    "user": {
+                        "href": "http://user:8080/users/1"
                     }
                 },
-                "bookId": 1,
-                "mType": null,
-                "rentalStatus": "01",
-                "reservationId": 1
+                "userName": "kim"
             }
         ]
     },
     "_links": {
         "profile": {
-            "href": "http://localhost:8083/profile/rentals"
+            "href": "http://user:8080/profile/users"
         },
         "self": {
-            "href": "http://localhost:8083/rentals{?page,size,sort}",
+            "href": "http://user:8080/users{?page,size,sort}",
             "templated": true
         }
     },
@@ -283,132 +212,80 @@ Transfer-Encoding: chunked
 }
 
 
-(base) C:\Users\SKCC>http http://localhost:8082/reservation bookId=2 bookName=Data_Structure reservationStatus=01
-HTTP/1.1 200
+(base) D:\>http http://52.141.27.38:8080/users/userCreation userName=lee
+HTTP/1.1 200 OK
 Content-Type: application/json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:50:34 GMT
-Transfer-Encoding: chunked
+Date: Wed, 22 Apr 2020 07:53:36 GMT
+transfer-encoding: chunked
 
 {
-    "bookId": 2,
-    "createDate": null,
     "id": 2,
-    "mType": "reserved",
-    "reservationDate": null,
-    "reservationStatus": "01"
+    "userName": "lee"
 }
 
 
-(base) C:\Users\SKCC>http http://localhost:8083/rentals
-HTTP/1.1 200
+(base) D:\>http http://52.141.27.38:8080/users/userCreation userName=song
+HTTP/1.1 200 OK
+Content-Type: application/json;charset=UTF-8
+Date: Wed, 22 Apr 2020 07:53:40 GMT
+transfer-encoding: chunked
+
+{
+    "id": 3,
+    "userName": "song"
+}
+
+
+(base) D:\>http http://52.141.27.38:8080/users
+HTTP/1.1 200 OK
 Content-Type: application/hal+json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:50:39 GMT
-Transfer-Encoding: chunked
+Date: Wed, 22 Apr 2020 07:53:45 GMT
+transfer-encoding: chunked
 
 {
     "_embedded": {
-        "rentals": [
+        "users": [
             {
                 "_links": {
-                    "rental": {
-                        "href": "http://localhost:8083/rentals/1"
-                    },
                     "self": {
-                        "href": "http://localhost:8083/rentals/1"
+                        "href": "http://user:8080/users/1"
+                    },
+                    "user": {
+                        "href": "http://user:8080/users/1"
                     }
                 },
-                "bookId": 1,
-                "mType": null,
-                "rentalStatus": "01",
-                "reservationId": 1
+                "userName": "kim"
             },
             {
                 "_links": {
-                    "rental": {
-                        "href": "http://localhost:8083/rentals/2"
-                    },
                     "self": {
-                        "href": "http://localhost:8083/rentals/2"
+                        "href": "http://user:8080/users/2"
+                    },
+                    "user": {
+                        "href": "http://user:8080/users/2"
                     }
                 },
-                "bookId": 2,
-                "mType": null,
-                "rentalStatus": "01",
-                "reservationId": 2
+                "userName": "lee"
+            },
+            {
+                "_links": {
+                    "self": {
+                        "href": "http://user:8080/users/3"
+                    },
+                    "user": {
+                        "href": "http://user:8080/users/3"
+                    }
+                },
+                "userName": "song"
             }
         ]
     },
     "_links": {
         "profile": {
-            "href": "http://localhost:8083/profile/rentals"
+            "href": "http://user:8080/profile/users"
         },
         "self": {
-            "href": "http://localhost:8083/rentals{?page,size,sort}",
-            "templated": true
-        }
-    },
-    "page": {
-        "number": 0,
-        "size": 20,
-        "totalElements": 2,
-        "totalPages": 1
-    }
-}
-
-
-(base) C:\Users\SKCC>http http://localhost:8081/books
-HTTP/1.1 200
-Content-Type: application/hal+json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:50:54 GMT
-Transfer-Encoding: chunked
-
-{
-    "_embedded": {
-        "books": [
-            {
-                "_links": {
-                    "book": {
-                        "href": "http://localhost:8081/books/1"
-                    },
-                    "self": {
-                        "href": "http://localhost:8081/books/1"
-                    }
-                },
-                "bookName": "Cloud_Intensive_Course",
-                "bookStatus": "02"
-            },
-            {
-                "_links": {
-                    "book": {
-                        "href": "http://localhost:8081/books/2"
-                    },
-                    "self": {
-                        "href": "http://localhost:8081/books/2"
-                    }
-                },
-                "bookName": "Data_Structure",
-                "bookStatus": "02"
-            },
-            {
-                "_links": {
-                    "book": {
-                        "href": "http://localhost:8081/books/3"
-                    },
-                    "self": {
-                        "href": "http://localhost:8081/books/3"
-                    }
-                },
-                "bookName": "Math",
-                "bookStatus": "01"
-            }
-        ]
-    },
-    "_links": {
-        "profile": {
-            "href": "http://localhost:8081/profile/books"
-        },
-        "self": {
-            "href": "http://localhost:8081/books{?page,size,sort}",
+            "href": "http://user:8080/users{?page,size,sort}",
             "templated": true
         }
     },
@@ -421,360 +298,119 @@ Transfer-Encoding: chunked
 }
 
 
-(base) C:\Users\SKCC>http http://localhost:8083/rentals
-HTTP/1.1 200
-Content-Type: application/hal+json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:51:38 GMT
-Transfer-Encoding: chunked
-
-{
-    "_embedded": {
-        "rentals": [
-            {
-                "_links": {
-                    "rental": {
-                        "href": "http://localhost:8083/rentals/1"
-                    },
-                    "self": {
-                        "href": "http://localhost:8083/rentals/1"
-                    }
-                },
-                "bookId": 1,
-                "mType": null,
-                "rentalStatus": "01",
-                "reservationId": 1
-            },
-            {
-                "_links": {
-                    "rental": {
-                        "href": "http://localhost:8083/rentals/2"
-                    },
-                    "self": {
-                        "href": "http://localhost:8083/rentals/2"
-                    }
-                },
-                "bookId": 2,
-                "mType": null,
-                "rentalStatus": "01",
-                "reservationId": 2
-            }
-        ]
-    },
-    "_links": {
-        "profile": {
-            "href": "http://localhost:8083/profile/rentals"
-        },
-        "self": {
-            "href": "http://localhost:8083/rentals{?page,size,sort}",
-            "templated": true
-        }
-    },
-    "page": {
-        "number": 0,
-        "size": 20,
-        "totalElements": 2,
-        "totalPages": 1
-    }
-}
-
-
-(base) C:\Users\SKCC>http http://localhost:8083/rental/rented id=1 reservationId=1 bookId=1 rentalStatus=02
-HTTP/1.1 405
-Allow: PATCH
+(base) D:\>http http://52.141.27.38:8080/users/userCreation userName=kang
+HTTP/1.1 200 OK
 Content-Type: application/json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:52:24 GMT
-Transfer-Encoding: chunked
+Date: Thu, 23 Apr 2020 01:00:09 GMT
+transfer-encoding: chunked
 
 {
-    "error": "Method Not Allowed",
-    "message": "Request method 'POST' not supported",
-    "path": "/rental/rented",
-    "status": 405,
-    "timestamp": "2020-04-21T05:52:24.341+0000"
+    "id": 4,
+    "userName": "kang"
 }
 
 
-(base) C:\Users\SKCC>http PATCH http://localhost:8083/rental/rented id=1 reservationId=1 bookId=1 rentalStatus=02
-HTTP/1.1 200
-Content-Length: 0
-Date: Tue, 21 Apr 2020 05:52:33 GMT
-
-
-
-
-(base) C:\Users\SKCC>http http://localhost:8083/rentals
-HTTP/1.1 200
-Content-Type: application/hal+json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:52:44 GMT
-Transfer-Encoding: chunked
-
-{
-    "_embedded": {
-        "rentals": [
-            {
-                "_links": {
-                    "rental": {
-                        "href": "http://localhost:8083/rentals/1"
-                    },
-                    "self": {
-                        "href": "http://localhost:8083/rentals/1"
-                    }
-                },
-                "bookId": 1,
-                "mType": "rented",
-                "rentalStatus": "02",
-                "reservationId": 1
-            },
-            {
-                "_links": {
-                    "rental": {
-                        "href": "http://localhost:8083/rentals/2"
-                    },
-                    "self": {
-                        "href": "http://localhost:8083/rentals/2"
-                    }
-                },
-                "bookId": 2,
-                "mType": null,
-                "rentalStatus": "01",
-                "reservationId": 2
-            }
-        ]
-    },
-    "_links": {
-        "profile": {
-            "href": "http://localhost:8083/profile/rentals"
-        },
-        "self": {
-            "href": "http://localhost:8083/rentals{?page,size,sort}",
-            "templated": true
-        }
-    },
-    "page": {
-        "number": 0,
-        "size": 20,
-        "totalElements": 2,
-        "totalPages": 1
-    }
-}
-
-
-(base) C:\Users\SKCC>http PATCH http://localhost:8083/rental/returned id=1 reservationId=1 bookId=1 rentalStatus=03
-HTTP/1.1 200
-Content-Length: 0
-Date: Tue, 21 Apr 2020 05:53:30 GMT
-
-
-
-
-(base) C:\Users\SKCC>http http://localhost:8083/rentals
-HTTP/1.1 200
-Content-Type: application/hal+json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:53:46 GMT
-Transfer-Encoding: chunked
-
-{
-    "_embedded": {
-        "rentals": [
-            {
-                "_links": {
-                    "rental": {
-                        "href": "http://localhost:8083/rentals/1"
-                    },
-                    "self": {
-                        "href": "http://localhost:8083/rentals/1"
-                    }
-                },
-                "bookId": 1,
-                "mType": "returned",
-                "rentalStatus": "03",
-                "reservationId": null
-            },
-            {
-                "_links": {
-                    "rental": {
-                        "href": "http://localhost:8083/rentals/2"
-                    },
-                    "self": {
-                        "href": "http://localhost:8083/rentals/2"
-                    }
-                },
-                "bookId": 2,
-                "mType": null,
-                "rentalStatus": "01",
-                "reservationId": 2
-            }
-        ]
-    },
-    "_links": {
-        "profile": {
-            "href": "http://localhost:8083/profile/rentals"
-        },
-        "self": {
-            "href": "http://localhost:8083/rentals{?page,size,sort}",
-            "templated": true
-        }
-    },
-    "page": {
-        "number": 0,
-        "size": 20,
-        "totalElements": 2,
-        "totalPages": 1
-    }
-}
-
-
-(base) C:\Users\SKCC>http http://localhost:8082/reservations
-HTTP/1.1 200
-Content-Type: application/hal+json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:54:50 GMT
-Transfer-Encoding: chunked
-
-{
-    "_embedded": {
-        "reservations": [
-            {
-                "_links": {
-                    "reservation": {
-                        "href": "http://localhost:8082/reservations/1"
-                    },
-                    "self": {
-                        "href": "http://localhost:8082/reservations/1"
-                    }
-                },
-                "bookId": 1,
-                "createDate": null,
-                "mType": "reserved",
-                "reservationDate": null,
-                "reservationStatus": "01"
-            },
-            {
-                "_links": {
-                    "reservation": {
-                        "href": "http://localhost:8082/reservations/2"
-                    },
-                    "self": {
-                        "href": "http://localhost:8082/reservations/2"
-                    }
-                },
-                "bookId": 2,
-                "createDate": null,
-                "mType": "reserved",
-                "reservationDate": null,
-                "reservationStatus": "01"
-            }
-        ]
-    },
-    "_links": {
-        "profile": {
-            "href": "http://localhost:8082/profile/reservations"
-        },
-        "self": {
-            "href": "http://localhost:8082/reservations{?page,size,sort}",
-            "templated": true
-        }
-    },
-    "page": {
-        "number": 0,
-        "size": 20,
-        "totalElements": 2,
-        "totalPages": 1
-    }
-}
-
-
-(base) C:\Users\SKCC>http http://localhost:8082/reservationupdate id=2 reservationStatus=02 bookId=2
-HTTP/1.1 405
-Allow: PATCH
+(base) D:\>http http://52.141.27.38:8080/recruits/recruitCreation recruitName=recruit1
+HTTP/1.1 200 OK
 Content-Type: application/json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:55:27 GMT
-Transfer-Encoding: chunked
+Date: Thu, 23 Apr 2020 01:00:25 GMT
+transfer-encoding: chunked
 
 {
-    "error": "Method Not Allowed",
-    "message": "Request method 'POST' not supported",
-    "path": "/reservationupdate",
-    "status": 405,
-    "timestamp": "2020-04-21T05:55:27.157+0000"
+    "id": 1,
+    "recruitName": "recruit1"
 }
 
 
-(base) C:\Users\SKCC>http PATCH http://localhost:8082/reservationupdate id=2 reservationStatus=02 bookId=2
-HTTP/1.1 200
-Content-Length: 0
-Date: Tue, 21 Apr 2020 05:55:34 GMT
-
-
-
-
-(base) C:\Users\SKCC>http PATCH http://localhost:8081/books
-HTTP/1.1 404
+(base) D:\>http http://52.141.27.38:8080/recruits/recruitCreation recruitName=recruit2
+HTTP/1.1 200 OK
 Content-Type: application/json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:55:48 GMT
-Transfer-Encoding: chunked
+Date: Thu, 23 Apr 2020 01:00:28 GMT
+transfer-encoding: chunked
 
 {
-    "error": "Not Found",
-    "message": "No message available",
-    "path": "/books",
-    "status": 404,
-    "timestamp": "2020-04-21T05:55:48.908+0000"
+    "id": 2,
+    "recruitName": "recruit2"
 }
 
 
-(base) C:\Users\SKCC>http http://localhost:8081/books
-HTTP/1.1 200
+(base) D:\>http http://52.141.27.38:8080/recruits/recruitCreation recruitName=recruit3
+HTTP/1.1 200 OK
+Content-Type: application/json;charset=UTF-8
+Date: Thu, 23 Apr 2020 01:00:31 GMT
+transfer-encoding: chunked
+
+{
+    "id": 3,
+    "recruitName": "recruit3"
+}
+
+
+(base) D:\>http http://52.141.27.38:8080/recruits/recruits
+HTTP/1.1 500 Internal Server Error
+Content-Type: application/json;charset=UTF-8
+Date: Thu, 23 Apr 2020 01:00:40 GMT
+transfer-encoding: chunked
+
+{
+    "cause": {
+        "cause": null,
+        "message": "For input string: \"recruits\""
+    },
+    "message": "Failed to convert from type [java.lang.String] to type [java.lang.Long] for value 'recruits'; nested exception is java.lang.NumberFormatException: For input string: \"recruits\""
+}
+
+
+(base) D:\>http http://52.141.27.38:8080/recruits
+HTTP/1.1 200 OK
 Content-Type: application/hal+json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:55:56 GMT
-Transfer-Encoding: chunked
+Date: Thu, 23 Apr 2020 01:00:48 GMT
+transfer-encoding: chunked
 
 {
     "_embedded": {
-        "books": [
+        "recruits": [
             {
                 "_links": {
-                    "book": {
-                        "href": "http://localhost:8081/books/1"
+                    "recruit": {
+                        "href": "http://recruit:8080/recruits/1"
                     },
                     "self": {
-                        "href": "http://localhost:8081/books/1"
+                        "href": "http://recruit:8080/recruits/1"
                     }
                 },
-                "bookName": "Cloud_Intensive_Course",
-                "bookStatus": "01"
+                "recruitName": "recruit1"
             },
             {
                 "_links": {
-                    "book": {
-                        "href": "http://localhost:8081/books/2"
+                    "recruit": {
+                        "href": "http://recruit:8080/recruits/2"
                     },
                     "self": {
-                        "href": "http://localhost:8081/books/2"
+                        "href": "http://recruit:8080/recruits/2"
                     }
                 },
-                "bookName": "Data_Structure",
-                "bookStatus": "01"
+                "recruitName": "recruit2"
             },
             {
                 "_links": {
-                    "book": {
-                        "href": "http://localhost:8081/books/3"
+                    "recruit": {
+                        "href": "http://recruit:8080/recruits/3"
                     },
                     "self": {
-                        "href": "http://localhost:8081/books/3"
+                        "href": "http://recruit:8080/recruits/3"
                     }
                 },
-                "bookName": "Math",
-                "bookStatus": "01"
+                "recruitName": "recruit3"
             }
         ]
     },
     "_links": {
         "profile": {
-            "href": "http://localhost:8081/profile/books"
+            "href": "http://recruit:8080/profile/recruits"
         },
         "self": {
-            "href": "http://localhost:8081/books{?page,size,sort}",
+            "href": "http://recruit:8080/recruits{?page,size,sort}",
             "templated": true
         }
     },
@@ -787,122 +423,351 @@ Transfer-Encoding: chunked
 }
 
 
-(base) C:\Users\SKCC>http http://localhost:8082/reservations
-HTTP/1.1 200
-Content-Type: application/hal+json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:56:09 GMT
-Transfer-Encoding: chunked
+(base) D:\>http http://52.141.27.38:8080/apps/appCreation userId=1 userName=kim schoolName=soongsil recruitId=2 recruitName=recruit2
+HTTP/1.1 200 OK
+Content-Type: application/json;charset=UTF-8
+Date: Thu, 23 Apr 2020 01:01:01 GMT
+transfer-encoding: chunked
 
 {
-    "_embedded": {
-        "reservations": [
-            {
-                "_links": {
-                    "reservation": {
-                        "href": "http://localhost:8082/reservations/1"
-                    },
-                    "self": {
-                        "href": "http://localhost:8082/reservations/1"
-                    }
-                },
-                "bookId": 1,
-                "createDate": null,
-                "mType": "reserved",
-                "reservationDate": null,
-                "reservationStatus": "01"
-            },
-            {
-                "_links": {
-                    "reservation": {
-                        "href": "http://localhost:8082/reservations/2"
-                    },
-                    "self": {
-                        "href": "http://localhost:8082/reservations/2"
-                    }
-                },
-                "bookId": 2,
-                "createDate": null,
-                "mType": "reservationupdate",
-                "reservationDate": null,
-                "reservationStatus": "02"
-            }
-        ]
-    },
-    "_links": {
-        "profile": {
-            "href": "http://localhost:8082/profile/reservations"
-        },
-        "self": {
-            "href": "http://localhost:8082/reservations{?page,size,sort}",
-            "templated": true
-        }
-    },
-    "page": {
-        "number": 0,
-        "size": 20,
-        "totalElements": 2,
-        "totalPages": 1
-    }
+    "id": 1,
+    "recruitId": 2,
+    "recruitName": "recruit2",
+    "schoolName": "soongsil",
+    "userId": 1,
+    "userName": "kim"
 }
 
 
-(base) C:\Users\SKCC>
-(base) C:\Users\SKCC>
-(base) C:\Users\SKCC>
-(base) C:\Users\SKCC>http http://localhost:8085/myPages
-HTTP/1.1 200
+(base) D:\>http http://52.141.27.38:8080/apps/appCreation userId=2 userName=lee schoolName=seoul recruitId=2 recruitName=recruit2
+HTTP/1.1 200 OK
+Content-Type: application/json;charset=UTF-8
+Date: Thu, 23 Apr 2020 01:01:15 GMT
+transfer-encoding: chunked
+
+{
+    "id": 2,
+    "recruitId": 2,
+    "recruitName": "recruit2",
+    "schoolName": "seoul",
+    "userId": 2,
+    "userName": "lee"
+}
+
+
+(base) D:\>http http://52.141.27.38:8080/apps
+HTTP/1.1 200 OK
 Content-Type: application/hal+json;charset=UTF-8
-Date: Tue, 21 Apr 2020 05:56:37 GMT
-Transfer-Encoding: chunked
+Date: Thu, 23 Apr 2020 01:01:24 GMT
+transfer-encoding: chunked
 
 {
     "_embedded": {
-        "myPages": [
+        "apps": [
             {
                 "_links": {
-                    "myPage": {
-                        "href": "http://localhost:8085/myPages/1"
+                    "app": {
+                        "href": "http://app:8080/apps/1"
                     },
                     "self": {
-                        "href": "http://localhost:8085/myPages/1"
+                        "href": "http://app:8080/apps/1"
                     }
                 },
-                "bookId": 1,
-                "bookName": null,
-                "rentalId": 1,
-                "rentalStatus": "03",
-                "reservationDate": null,
-                "reservationId": 1,
-                "reservationStatus": "01"
+                "recruitId": 2,
+                "recruitName": "recruit2",
+                "schoolName": "soongsil",
+                "userId": 1,
+                "userName": "kim"
             },
             {
                 "_links": {
-                    "myPage": {
-                        "href": "http://localhost:8085/myPages/2"
+                    "app": {
+                        "href": "http://app:8080/apps/2"
                     },
                     "self": {
-                        "href": "http://localhost:8085/myPages/2"
+                        "href": "http://app:8080/apps/2"
                     }
                 },
-                "bookId": 2,
-                "bookName": null,
-                "rentalId": null,
-                "rentalStatus": null,
-                "reservationDate": null,
-                "reservationId": 2,
-                "reservationStatus": "02"
+                "recruitId": 2,
+                "recruitName": "recruit2",
+                "schoolName": "seoul",
+                "userId": 2,
+                "userName": "lee"
             }
         ]
     },
     "_links": {
         "profile": {
-            "href": "http://localhost:8085/profile/myPages"
+            "href": "http://app:8080/profile/apps"
         },
         "search": {
-            "href": "http://localhost:8085/myPages/search"
+            "href": "http://app:8080/apps/search"
         },
         "self": {
-            "href": "http://localhost:8085/myPages"
+            "href": "http://app:8080/apps{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 2,
+        "totalPages": 1
+    }
+}
+
+
+(base) D:\>http http://52.141.27.38:8080/recruitProcesses
+HTTP/1.1 200 OK
+Content-Type: application/hal+json;charset=UTF-8
+Date: Thu, 23 Apr 2020 01:01:33 GMT
+transfer-encoding: chunked
+
+{
+    "_embedded": {
+        "recruitProcesses": [
+            {
+                "_links": {
+                    "recruitProcess": {
+                        "href": "http://recruitprocess:8080/recruitProcesses/1"
+                    },
+                    "self": {
+                        "href": "http://recruitprocess:8080/recruitProcesses/1"
+                    }
+                },
+                "appId": 1,
+                "processResult": "접수완료",
+                "recruitId": 2,
+                "userId": 1
+            },
+            {
+                "_links": {
+                    "recruitProcess": {
+                        "href": "http://recruitprocess:8080/recruitProcesses/2"
+                    },
+                    "self": {
+                        "href": "http://recruitprocess:8080/recruitProcesses/2"
+                    }
+                },
+                "appId": 2,
+                "processResult": "접수완료",
+                "recruitId": 2,
+                "userId": 2
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://recruitprocess:8080/profile/recruitProcesses"
+        },
+        "self": {
+            "href": "http://recruitprocess:8080/recruitProcesses{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 2,
+        "totalPages": 1
+    }
+}
+
+
+(base) D:\>http http://52.141.27.38:8080/recruitProcessViews
+HTTP/1.1 200 OK
+Content-Type: application/hal+json;charset=UTF-8
+Date: Thu, 23 Apr 2020 01:01:46 GMT
+transfer-encoding: chunked
+
+{
+    "_embedded": {
+        "recruitProcessViews": [
+            {
+                "_links": {
+                    "recruitProcessView": {
+                        "href": "http://recruitprocessview:8080/recruitProcessViews/1"
+                    },
+                    "self": {
+                        "href": "http://recruitprocessview:8080/recruitProcessViews/1"
+                    }
+                },
+                "appId": 1,
+                "processResult": "접수완료",
+                "recruitId": 2,
+                "recruitName": "recruit2",
+                "schoolName": "soongsil",
+                "userId": 1,
+                "userName": "kim"
+            },
+            {
+                "_links": {
+                    "recruitProcessView": {
+                        "href": "http://recruitprocessview:8080/recruitProcessViews/2"
+                    },
+                    "self": {
+                        "href": "http://recruitprocessview:8080/recruitProcessViews/2"
+                    }
+                },
+                "appId": 2,
+                "processResult": "접수완료",
+                "recruitId": 2,
+                "recruitName": "recruit2",
+                "schoolName": "seoul",
+                "userId": 2,
+                "userName": "lee"
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://recruitprocessview:8080/profile/recruitProcessViews"
+        },
+        "search": {
+            "href": "http://recruitprocessview:8080/recruitProcessViews/search"
+        },
+        "self": {
+            "href": "http://recruitprocessview:8080/recruitProcessViews"
+        }
+    }
+}
+
+
+(base) D:\>http http://52.141.27.38:8080/users/userModify id=1 userName=kim222
+HTTP/1.1 405 Method Not Allowed
+Allow: PATCH
+Content-Type: application/json;charset=UTF-8
+Date: Thu, 23 Apr 2020 01:01:56 GMT
+transfer-encoding: chunked
+
+{
+    "error": "Method Not Allowed",
+    "message": "Request method 'POST' not supported",
+    "path": "/users/userModify",
+    "status": 405,
+    "timestamp": "2020-04-23T01:01:56.685+0000"
+}
+
+
+(base) D:\>http PATCH http://52.141.27.38:8080/users/userModify id=1 userName=kim222
+HTTP/1.1 200 OK
+Date: Thu, 23 Apr 2020 01:02:14 GMT
+content-length: 0
+
+
+
+
+(base) D:\>http http://52.141.27.38:8080/users/1
+HTTP/1.1 200 OK
+Content-Type: application/hal+json;charset=UTF-8
+Date: Thu, 23 Apr 2020 01:02:26 GMT
+transfer-encoding: chunked
+
+{
+    "_links": {
+        "self": {
+            "href": "http://user:8080/users/1"
+        },
+        "user": {
+            "href": "http://user:8080/users/1"
+        }
+    },
+    "userName": "kim222"
+}
+
+
+(base) D:\>http http://52.141.27.38:8080/apps/1
+HTTP/1.1 200 OK
+Content-Type: application/hal+json;charset=UTF-8
+Date: Thu, 23 Apr 2020 01:02:35 GMT
+transfer-encoding: chunked
+
+{
+    "_links": {
+        "app": {
+            "href": "http://app:8080/apps/1"
+        },
+        "self": {
+            "href": "http://app:8080/apps/1"
+        }
+    },
+    "recruitId": 2,
+    "recruitName": "recruit2",
+    "schoolName": "soongsil",
+    "userId": null,
+    "userName": "kim222"
+}
+
+
+(base) D:\>http http://52.141.27.38:8080/recruitProcesses/recruitProcessCreation appId=1 userId=1 recruitId=2 processResult=서류합격
+HTTP/1.1 200 OK
+Content-Type: application/json;charset=UTF-8
+Date: Thu, 23 Apr 2020 01:02:49 GMT
+transfer-encoding: chunked
+
+{
+    "appId": 1,
+    "id": 3,
+    "processResult": "서류합격",
+    "recruitId": 2,
+    "userId": 1
+}
+
+
+(base) D:\>http http://52.141.27.38:8080/recruitProcessViews
+HTTP/1.1 200 OK
+Content-Type: application/hal+json;charset=UTF-8
+Date: Thu, 23 Apr 2020 01:03:02 GMT
+transfer-encoding: chunked
+
+{
+    "_embedded": {
+        "recruitProcessViews": [
+            {
+                "_links": {
+                    "recruitProcessView": {
+                        "href": "http://recruitprocessview:8080/recruitProcessViews/1"
+                    },
+                    "self": {
+                        "href": "http://recruitprocessview:8080/recruitProcessViews/1"
+                    }
+                },
+                "appId": 1,
+                "processResult": "서류합격",
+                "recruitId": 2,
+                "recruitName": "recruit2",
+                "schoolName": "soongsil",
+                "userId": 1,
+                "userName": "kim222"
+            },
+            {
+                "_links": {
+                    "recruitProcessView": {
+                        "href": "http://recruitprocessview:8080/recruitProcessViews/2"
+                    },
+                    "self": {
+                        "href": "http://recruitprocessview:8080/recruitProcessViews/2"
+                    }
+                },
+                "appId": 2,
+                "processResult": "접수완료",
+                "recruitId": 2,
+                "recruitName": "recruit2",
+                "schoolName": "seoul",
+                "userId": 2,
+                "userName": "lee"
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://recruitprocessview:8080/profile/recruitProcessViews"
+        },
+        "search": {
+            "href": "http://recruitprocessview:8080/recruitProcessViews/search"
+        },
+        "self": {
+            "href": "http://recruitprocessview:8080/recruitProcessViews"
         }
     }
 }
