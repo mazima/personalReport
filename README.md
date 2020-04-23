@@ -10,9 +10,8 @@ http://msaez.io/#/storming/NVaFbcVDMkP3uU83TbQd72J4OqU2/mine/127842a8579e0bf47ac
 ![image](https://user-images.githubusercontent.com/36656979/80048943-9d392c80-854c-11ea-9bcb-1ae1d29073f8.png)
 
 ## 헥사고날 아키텍처 다이어그램 도출
-    
-![image](https://github.com/gogohs/food-delivery/blob/master/img1.PNG?raw=true)
-![image](https://github.com/gogohs/food-delivery/blob/master/img2.PNG?raw=true)
+![image](https://user-images.githubusercontent.com/36656979/80049723-a2977680-854e-11ea-919c-88016176477a.png)
+![image](https://user-images.githubusercontent.com/36656979/80049745-b17e2900-854e-11ea-86aa-773d61df5785.png)
 
     - Chris Richardson, MSA Patterns 참고하여 Inbound adaptor와 Outbound adaptor를 구분함
     - 호출관계에서 PubSub 과 Req/Resp 를 구분함
