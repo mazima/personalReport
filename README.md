@@ -1,6 +1,32 @@
-![image](https://user-images.githubusercontent.com/487999/79708354-29074a80-82fa-11ea-80df-0db3962fb453.png)
+## 소스코드
 
-# 예제 - 음식배달
+https://drive.google.com/file/d/1Af344MBBXZWvMu0wLjEkL_XNWihfxljW/view?usp=sharing
+
+## MSAEAZ
+
+VERSION_0.9
+http://msaez.io/#/storming/NVaFbcVDMkP3uU83TbQd72J4OqU2/mine/3c8f5eeec2a5b93ab3509e91c18528a8/-M5M9K_1izVA8qGysnfy
+
+VERSION_0.1
+http://msaez.io/#/storming/NVaFbcVDMkP3uU83TbQd72J4OqU2/mine/c004806409d14aa5fe40278ad20b8bc4/-M5LBN5LgZUeVj0pCgKU
+
+## EVENT STORMING
+
+![IMG_3081](https://user-images.githubusercontent.com/61151016/79801874-e2692d00-8399-11ea-8c82-f10dee2061d3.jpg)
+
+![EVENTSTOMRING초반](https://user-images.githubusercontent.com/61151016/79916367-91257000-8463-11ea-8020-b85f32056829.JPG)
+
+## 헥사고날 아키텍처 다이어그램 도출
+    
+![image](https://github.com/gogohs/food-delivery/blob/master/img1.PNG?raw=true)
+![image](https://github.com/gogohs/food-delivery/blob/master/img2.PNG?raw=true)
+
+    - Chris Richardson, MSA Patterns 참고하여 Inbound adaptor와 Outbound adaptor를 구분함
+    - 호출관계에서 PubSub 과 Req/Resp 를 구분함
+    - 서브 도메인과 바운디드 컨텍스트의 분리:  각 팀의 KPI 별로 아래와 같이 관심 구현 스토리를 나눠가짐
+
+
+# 예제 - 도서대여
 
 본 예제는 MSA/DDD/Event Storming/EDA 를 포괄하는 분석/설계/구현/운영 전단계를 커버하도록 구성한 예제입니다.
 이는 클라우드 네이티브 애플리케이션의 개발에 요구되는 체크포인트들을 통과하기 위한 예시 답안을 포함합니다.
@@ -9,7 +35,7 @@
 
 # Table of contents
 
-- [예제 - 음식배달](#---)
+- [예제 - 도서대여](#---)
   - [서비스 시나리오](#서비스-시나리오)
   - [체크포인트](#체크포인트)
   - [분석/설계](#분석설계)
@@ -28,29 +54,876 @@
 
 # 서비스 시나리오
 
-배달의 민족 커버하기 - https://1sung.tistory.com/106
-
 기능적 요구사항
-1. 고객이 메뉴를 선택하여 주문한다
-1. 고객이 결제한다
-1. 주문이 되면 주문 내역이 입점상점주인에게 전달된다
-1. 상점주인이 확인하여 요리해서 배달 출발한다
-1. 고객이 주문을 취소할 수 있다
-1. 주문이 취소되면 배달이 취소된다
-1. 고객이 주문상태를 중간중간 조회한다
-1. 주문상태가 바뀔 때 마다 카톡으로 알림을 보낸다
+* 도서상태:  ```01(대여가능)``` ```02(대여중)```
+* 대여상태:  ```01(대여등록)``` ```02(대여중)``` ```03(반납완료)```
+* 예약상태:  ```01(예약등록)``` ```02(예약취소)``` 
+
+1. 도서관리자가 도서를 등록한다. (도서id,도서명,도서상태=01)
+```sh
+http http://localhost:8081/book bookName=AAA bookStatus=01
+http http://localhost:8081/book bookName=BBB bookStatus=01
+```
+1. 고객이 도서를 선택하여 예약한다. (예약상태 업데이트 = 01)
+```sh
+http http://localhost:8082/reservation bookId=1 reservationStatus=01
+```
+1. 예약 후 도서정보 상태를 업데이트 한다. (도서상태 업데이트=02)  
+1. 예약 후 대여정보에 등록된다. (대여상태 업데이트=01)
+1. 고객이 예약한 도서를 대여한다 (대여상태 업데이트=02)
+```sh
+http PATCH http://localhost:8083/rental/rented id=1 reservationId=1 bookId=1 reservationStatus=02
+```
+1. 고객이 예약을 반납한다. (대여상태 업데이트=03)
+```sh
+http PATCH http://localhost:8083/rental/returned id=1 reservationId=1 bookId=1 reservationStatus=03
+```
+1. 반납 후 도서정보를 상태를 업데이트 한다. (도서정보 업데이트=01)
+1. 고객이 예약을 취소한다. (예약상태 업데이트=02)
+```sh
+http PATCH http://localhost:8082/reservationupdate bookId=2 reservationStatus=02
+```
+1. 취소 후 도서정보를 상태를 업데이트한다. (도서상태 업데이트=01)
+1. 고객이 예약 및 대여상태를 중간중간 조회한다.
+1. 예약 및 대여상태가 바뀔 때 마다 카톡으로 알림을 보낸다.
+1. 상태정보를 뷰에 로깅한다
 
 비기능적 요구사항
 1. 트랜잭션
-    1. 결제가 되지 않은 주문건은 아예 거래가 성립되지 않아야 한다  Sync 호출 
+    1. 예약된 도서는 도서정보 상태를 바로 수정하여 예약하여 추가로 예약되어서는 안된다  Sync 호출 
 1. 장애격리
-    1. 상점관리 기능이 수행되지 않더라도 주문은 365일 24시간 받을 수 있어야 한다  Async (event-driven), Eventual Consistency
-    1. 결제시스템이 과중되면 사용자를 잠시동안 받지 않고 결제를 잠시후에 하도록 유도한다  Circuit breaker, fallback
+    1. 예약기능이 되지 않더라도 대여 및 반납은 365일 24시간 받을 수 있어야 한다  Async (event-driven), Eventual Consistency
+    1. 예약시스템이 과중되면 사용자를 잠시동안 받지 않고 예약을 잠시후에 하도록 유도한다  Circuit breaker, fallback
 1. 성능
-    1. 고객이 자주 상점관리에서 확인할 수 있는 배달상태를 주문시스템(프론트엔드)에서 확인할 수 있어야 한다  CQRS
-    1. 배달상태가 바뀔때마다 카톡 등으로 알림을 줄 수 있어야 한다  Event driven
+    1. 고객이 에약내역 및 대여상태를 my-page(프론트엔드)에서 확인할 수 있어야 한다  CQRS
+    1. 예약 및 대여상태가 바뀔때마다 카톡 등으로 알림을 줄 수 있어야 한다  Event driven
+
+# 서비스 실행 결과
+```sh
+(base) C:\Users\SKCC>http http://localhost:8081/books
+HTTP/1.1 200
+Content-Type: application/hal+json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:44:16 GMT
+Transfer-Encoding: chunked
+
+{
+    "_embedded": {
+        "books": []
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8081/profile/books"
+        },
+        "self": {
+            "href": "http://localhost:8081/books{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 0,
+        "totalPages": 0
+    }
+}
 
 
+(base) C:\Users\SKCC>http http://localhost:8081/book bookName=Cloud_Intensive_Course bookStatus=01
+HTTP/1.1 200
+Content-Type: application/json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:45:49 GMT
+Transfer-Encoding: chunked
+
+{
+    "bookName": "Cloud_Intensive_Course",
+    "bookStatus": "01",
+    "id": 1
+}
+
+
+(base) C:\Users\SKCC>http http://localhost:8081/book bookName=Data_Structure bookStatus=01
+HTTP/1.1 200
+Content-Type: application/json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:46:19 GMT
+Transfer-Encoding: chunked
+
+{
+    "bookName": "Data_Structure",
+    "bookStatus": "01",
+    "id": 2
+}
+
+
+(base) C:\Users\SKCC>http http://localhost:8081/book bookName=Math bookStatus=01
+HTTP/1.1 200
+Content-Type: application/json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:46:27 GMT
+Transfer-Encoding: chunked
+
+{
+    "bookName": "Math",
+    "bookStatus": "01",
+    "id": 3
+}
+
+
+(base) C:\Users\SKCC>http http://localhost:8081/books
+HTTP/1.1 200
+Content-Type: application/hal+json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:46:33 GMT
+Transfer-Encoding: chunked
+
+{
+    "_embedded": {
+        "books": [
+            {
+                "_links": {
+                    "book": {
+                        "href": "http://localhost:8081/books/1"
+                    },
+                    "self": {
+                        "href": "http://localhost:8081/books/1"
+                    }
+                },
+                "bookName": "Cloud_Intensive_Course",
+                "bookStatus": "01"
+            },
+            {
+                "_links": {
+                    "book": {
+                        "href": "http://localhost:8081/books/2"
+                    },
+                    "self": {
+                        "href": "http://localhost:8081/books/2"
+                    }
+                },
+                "bookName": "Data_Structure",
+                "bookStatus": "01"
+            },
+            {
+                "_links": {
+                    "book": {
+                        "href": "http://localhost:8081/books/3"
+                    },
+                    "self": {
+                        "href": "http://localhost:8081/books/3"
+                    }
+                },
+                "bookName": "Math",
+                "bookStatus": "01"
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8081/profile/books"
+        },
+        "self": {
+            "href": "http://localhost:8081/books{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 3,
+        "totalPages": 1
+    }
+}
+
+
+(base) C:\Users\SKCC>http http://localhost:8082/reservation bookId=1 bookName=Cloud_Intensive_Course reservationStatus=01
+HTTP/1.1 200
+Content-Type: application/json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:47:34 GMT
+Transfer-Encoding: chunked
+
+{
+    "bookId": 1,
+    "createDate": null,
+    "id": 1,
+    "mType": "reserved",
+    "reservationDate": null,
+    "reservationStatus": "01"
+}
+
+
+(base) C:\Users\SKCC>http http://localhost:8083/rentals
+HTTP/1.1 200
+Content-Type: application/hal+json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:47:58 GMT
+Transfer-Encoding: chunked
+
+{
+    "_embedded": {
+        "rentals": [
+            {
+                "_links": {
+                    "rental": {
+                        "href": "http://localhost:8083/rentals/1"
+                    },
+                    "self": {
+                        "href": "http://localhost:8083/rentals/1"
+                    }
+                },
+                "bookId": 1,
+                "mType": null,
+                "rentalStatus": "01",
+                "reservationId": 1
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8083/profile/rentals"
+        },
+        "self": {
+            "href": "http://localhost:8083/rentals{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 1,
+        "totalPages": 1
+    }
+}
+
+
+(base) C:\Users\SKCC>http http://localhost:8082/reservation bookId=2 bookName=Data_Structure reservationStatus=01
+HTTP/1.1 200
+Content-Type: application/json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:50:34 GMT
+Transfer-Encoding: chunked
+
+{
+    "bookId": 2,
+    "createDate": null,
+    "id": 2,
+    "mType": "reserved",
+    "reservationDate": null,
+    "reservationStatus": "01"
+}
+
+
+(base) C:\Users\SKCC>http http://localhost:8083/rentals
+HTTP/1.1 200
+Content-Type: application/hal+json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:50:39 GMT
+Transfer-Encoding: chunked
+
+{
+    "_embedded": {
+        "rentals": [
+            {
+                "_links": {
+                    "rental": {
+                        "href": "http://localhost:8083/rentals/1"
+                    },
+                    "self": {
+                        "href": "http://localhost:8083/rentals/1"
+                    }
+                },
+                "bookId": 1,
+                "mType": null,
+                "rentalStatus": "01",
+                "reservationId": 1
+            },
+            {
+                "_links": {
+                    "rental": {
+                        "href": "http://localhost:8083/rentals/2"
+                    },
+                    "self": {
+                        "href": "http://localhost:8083/rentals/2"
+                    }
+                },
+                "bookId": 2,
+                "mType": null,
+                "rentalStatus": "01",
+                "reservationId": 2
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8083/profile/rentals"
+        },
+        "self": {
+            "href": "http://localhost:8083/rentals{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 2,
+        "totalPages": 1
+    }
+}
+
+
+(base) C:\Users\SKCC>http http://localhost:8081/books
+HTTP/1.1 200
+Content-Type: application/hal+json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:50:54 GMT
+Transfer-Encoding: chunked
+
+{
+    "_embedded": {
+        "books": [
+            {
+                "_links": {
+                    "book": {
+                        "href": "http://localhost:8081/books/1"
+                    },
+                    "self": {
+                        "href": "http://localhost:8081/books/1"
+                    }
+                },
+                "bookName": "Cloud_Intensive_Course",
+                "bookStatus": "02"
+            },
+            {
+                "_links": {
+                    "book": {
+                        "href": "http://localhost:8081/books/2"
+                    },
+                    "self": {
+                        "href": "http://localhost:8081/books/2"
+                    }
+                },
+                "bookName": "Data_Structure",
+                "bookStatus": "02"
+            },
+            {
+                "_links": {
+                    "book": {
+                        "href": "http://localhost:8081/books/3"
+                    },
+                    "self": {
+                        "href": "http://localhost:8081/books/3"
+                    }
+                },
+                "bookName": "Math",
+                "bookStatus": "01"
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8081/profile/books"
+        },
+        "self": {
+            "href": "http://localhost:8081/books{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 3,
+        "totalPages": 1
+    }
+}
+
+
+(base) C:\Users\SKCC>http http://localhost:8083/rentals
+HTTP/1.1 200
+Content-Type: application/hal+json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:51:38 GMT
+Transfer-Encoding: chunked
+
+{
+    "_embedded": {
+        "rentals": [
+            {
+                "_links": {
+                    "rental": {
+                        "href": "http://localhost:8083/rentals/1"
+                    },
+                    "self": {
+                        "href": "http://localhost:8083/rentals/1"
+                    }
+                },
+                "bookId": 1,
+                "mType": null,
+                "rentalStatus": "01",
+                "reservationId": 1
+            },
+            {
+                "_links": {
+                    "rental": {
+                        "href": "http://localhost:8083/rentals/2"
+                    },
+                    "self": {
+                        "href": "http://localhost:8083/rentals/2"
+                    }
+                },
+                "bookId": 2,
+                "mType": null,
+                "rentalStatus": "01",
+                "reservationId": 2
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8083/profile/rentals"
+        },
+        "self": {
+            "href": "http://localhost:8083/rentals{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 2,
+        "totalPages": 1
+    }
+}
+
+
+(base) C:\Users\SKCC>http http://localhost:8083/rental/rented id=1 reservationId=1 bookId=1 rentalStatus=02
+HTTP/1.1 405
+Allow: PATCH
+Content-Type: application/json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:52:24 GMT
+Transfer-Encoding: chunked
+
+{
+    "error": "Method Not Allowed",
+    "message": "Request method 'POST' not supported",
+    "path": "/rental/rented",
+    "status": 405,
+    "timestamp": "2020-04-21T05:52:24.341+0000"
+}
+
+
+(base) C:\Users\SKCC>http PATCH http://localhost:8083/rental/rented id=1 reservationId=1 bookId=1 rentalStatus=02
+HTTP/1.1 200
+Content-Length: 0
+Date: Tue, 21 Apr 2020 05:52:33 GMT
+
+
+
+
+(base) C:\Users\SKCC>http http://localhost:8083/rentals
+HTTP/1.1 200
+Content-Type: application/hal+json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:52:44 GMT
+Transfer-Encoding: chunked
+
+{
+    "_embedded": {
+        "rentals": [
+            {
+                "_links": {
+                    "rental": {
+                        "href": "http://localhost:8083/rentals/1"
+                    },
+                    "self": {
+                        "href": "http://localhost:8083/rentals/1"
+                    }
+                },
+                "bookId": 1,
+                "mType": "rented",
+                "rentalStatus": "02",
+                "reservationId": 1
+            },
+            {
+                "_links": {
+                    "rental": {
+                        "href": "http://localhost:8083/rentals/2"
+                    },
+                    "self": {
+                        "href": "http://localhost:8083/rentals/2"
+                    }
+                },
+                "bookId": 2,
+                "mType": null,
+                "rentalStatus": "01",
+                "reservationId": 2
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8083/profile/rentals"
+        },
+        "self": {
+            "href": "http://localhost:8083/rentals{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 2,
+        "totalPages": 1
+    }
+}
+
+
+(base) C:\Users\SKCC>http PATCH http://localhost:8083/rental/returned id=1 reservationId=1 bookId=1 rentalStatus=03
+HTTP/1.1 200
+Content-Length: 0
+Date: Tue, 21 Apr 2020 05:53:30 GMT
+
+
+
+
+(base) C:\Users\SKCC>http http://localhost:8083/rentals
+HTTP/1.1 200
+Content-Type: application/hal+json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:53:46 GMT
+Transfer-Encoding: chunked
+
+{
+    "_embedded": {
+        "rentals": [
+            {
+                "_links": {
+                    "rental": {
+                        "href": "http://localhost:8083/rentals/1"
+                    },
+                    "self": {
+                        "href": "http://localhost:8083/rentals/1"
+                    }
+                },
+                "bookId": 1,
+                "mType": "returned",
+                "rentalStatus": "03",
+                "reservationId": null
+            },
+            {
+                "_links": {
+                    "rental": {
+                        "href": "http://localhost:8083/rentals/2"
+                    },
+                    "self": {
+                        "href": "http://localhost:8083/rentals/2"
+                    }
+                },
+                "bookId": 2,
+                "mType": null,
+                "rentalStatus": "01",
+                "reservationId": 2
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8083/profile/rentals"
+        },
+        "self": {
+            "href": "http://localhost:8083/rentals{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 2,
+        "totalPages": 1
+    }
+}
+
+
+(base) C:\Users\SKCC>http http://localhost:8082/reservations
+HTTP/1.1 200
+Content-Type: application/hal+json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:54:50 GMT
+Transfer-Encoding: chunked
+
+{
+    "_embedded": {
+        "reservations": [
+            {
+                "_links": {
+                    "reservation": {
+                        "href": "http://localhost:8082/reservations/1"
+                    },
+                    "self": {
+                        "href": "http://localhost:8082/reservations/1"
+                    }
+                },
+                "bookId": 1,
+                "createDate": null,
+                "mType": "reserved",
+                "reservationDate": null,
+                "reservationStatus": "01"
+            },
+            {
+                "_links": {
+                    "reservation": {
+                        "href": "http://localhost:8082/reservations/2"
+                    },
+                    "self": {
+                        "href": "http://localhost:8082/reservations/2"
+                    }
+                },
+                "bookId": 2,
+                "createDate": null,
+                "mType": "reserved",
+                "reservationDate": null,
+                "reservationStatus": "01"
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8082/profile/reservations"
+        },
+        "self": {
+            "href": "http://localhost:8082/reservations{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 2,
+        "totalPages": 1
+    }
+}
+
+
+(base) C:\Users\SKCC>http http://localhost:8082/reservationupdate id=2 reservationStatus=02 bookId=2
+HTTP/1.1 405
+Allow: PATCH
+Content-Type: application/json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:55:27 GMT
+Transfer-Encoding: chunked
+
+{
+    "error": "Method Not Allowed",
+    "message": "Request method 'POST' not supported",
+    "path": "/reservationupdate",
+    "status": 405,
+    "timestamp": "2020-04-21T05:55:27.157+0000"
+}
+
+
+(base) C:\Users\SKCC>http PATCH http://localhost:8082/reservationupdate id=2 reservationStatus=02 bookId=2
+HTTP/1.1 200
+Content-Length: 0
+Date: Tue, 21 Apr 2020 05:55:34 GMT
+
+
+
+
+(base) C:\Users\SKCC>http PATCH http://localhost:8081/books
+HTTP/1.1 404
+Content-Type: application/json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:55:48 GMT
+Transfer-Encoding: chunked
+
+{
+    "error": "Not Found",
+    "message": "No message available",
+    "path": "/books",
+    "status": 404,
+    "timestamp": "2020-04-21T05:55:48.908+0000"
+}
+
+
+(base) C:\Users\SKCC>http http://localhost:8081/books
+HTTP/1.1 200
+Content-Type: application/hal+json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:55:56 GMT
+Transfer-Encoding: chunked
+
+{
+    "_embedded": {
+        "books": [
+            {
+                "_links": {
+                    "book": {
+                        "href": "http://localhost:8081/books/1"
+                    },
+                    "self": {
+                        "href": "http://localhost:8081/books/1"
+                    }
+                },
+                "bookName": "Cloud_Intensive_Course",
+                "bookStatus": "01"
+            },
+            {
+                "_links": {
+                    "book": {
+                        "href": "http://localhost:8081/books/2"
+                    },
+                    "self": {
+                        "href": "http://localhost:8081/books/2"
+                    }
+                },
+                "bookName": "Data_Structure",
+                "bookStatus": "01"
+            },
+            {
+                "_links": {
+                    "book": {
+                        "href": "http://localhost:8081/books/3"
+                    },
+                    "self": {
+                        "href": "http://localhost:8081/books/3"
+                    }
+                },
+                "bookName": "Math",
+                "bookStatus": "01"
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8081/profile/books"
+        },
+        "self": {
+            "href": "http://localhost:8081/books{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 3,
+        "totalPages": 1
+    }
+}
+
+
+(base) C:\Users\SKCC>http http://localhost:8082/reservations
+HTTP/1.1 200
+Content-Type: application/hal+json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:56:09 GMT
+Transfer-Encoding: chunked
+
+{
+    "_embedded": {
+        "reservations": [
+            {
+                "_links": {
+                    "reservation": {
+                        "href": "http://localhost:8082/reservations/1"
+                    },
+                    "self": {
+                        "href": "http://localhost:8082/reservations/1"
+                    }
+                },
+                "bookId": 1,
+                "createDate": null,
+                "mType": "reserved",
+                "reservationDate": null,
+                "reservationStatus": "01"
+            },
+            {
+                "_links": {
+                    "reservation": {
+                        "href": "http://localhost:8082/reservations/2"
+                    },
+                    "self": {
+                        "href": "http://localhost:8082/reservations/2"
+                    }
+                },
+                "bookId": 2,
+                "createDate": null,
+                "mType": "reservationupdate",
+                "reservationDate": null,
+                "reservationStatus": "02"
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8082/profile/reservations"
+        },
+        "self": {
+            "href": "http://localhost:8082/reservations{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 2,
+        "totalPages": 1
+    }
+}
+
+
+(base) C:\Users\SKCC>
+(base) C:\Users\SKCC>
+(base) C:\Users\SKCC>
+(base) C:\Users\SKCC>http http://localhost:8085/myPages
+HTTP/1.1 200
+Content-Type: application/hal+json;charset=UTF-8
+Date: Tue, 21 Apr 2020 05:56:37 GMT
+Transfer-Encoding: chunked
+
+{
+    "_embedded": {
+        "myPages": [
+            {
+                "_links": {
+                    "myPage": {
+                        "href": "http://localhost:8085/myPages/1"
+                    },
+                    "self": {
+                        "href": "http://localhost:8085/myPages/1"
+                    }
+                },
+                "bookId": 1,
+                "bookName": null,
+                "rentalId": 1,
+                "rentalStatus": "03",
+                "reservationDate": null,
+                "reservationId": 1,
+                "reservationStatus": "01"
+            },
+            {
+                "_links": {
+                    "myPage": {
+                        "href": "http://localhost:8085/myPages/2"
+                    },
+                    "self": {
+                        "href": "http://localhost:8085/myPages/2"
+                    }
+                },
+                "bookId": 2,
+                "bookName": null,
+                "rentalId": null,
+                "rentalStatus": null,
+                "reservationDate": null,
+                "reservationId": 2,
+                "reservationStatus": "02"
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8085/profile/myPages"
+        },
+        "search": {
+            "href": "http://localhost:8085/myPages/search"
+        },
+        "self": {
+            "href": "http://localhost:8085/myPages"
+        }
+    }
+}
+
+```
+
+# CI/CD 실행 결과
+
+https://github.com/suhyoungjoon/syj/issues/1#issue-604295024
+![CLOUD과제_devops (azure)](https://user-images.githubusercontent.com/61151016/79915233-92ee3400-8461-11ea-9e1f-085e9ef902c6.jpg)
+![CLOUD과제_POD실행화면 (azure)](https://user-images.githubusercontent.com/61151016/79915678-61299d00-8462-11ea-9f65-5272a21405ca.jpg)
+
+---------------------------------------------------------------------------------------------------------------------------------------
 # 체크포인트
 
 - 분석 설계
@@ -199,8 +1072,8 @@
 
 ## 헥사고날 아키텍처 다이어그램 도출
     
-![image](https://user-images.githubusercontent.com/487999/79684772-eba9ab00-826e-11ea-9405-17e2bf39ec76.png)
-
+![image](https://github.com/gogohs/food-delivery/blob/master/img1.PNG?raw=true)
+![image](https://github.com/gogohs/food-delivery/blob/master/img2.PNG?raw=true)
 
     - Chris Richardson, MSA Patterns 참고하여 Inbound adaptor와 Outbound adaptor를 구분함
     - 호출관계에서 PubSub 과 Req/Resp 를 구분함
@@ -211,7 +1084,7 @@
 
 분석/설계 단계에서 도출된 헥사고날 아키텍처에 따라, 각 BC별로 대변되는 마이크로 서비스들을 스프링부트와 파이선으로 구현하였다. 구현한 각 서비스를 로컬에서 실행하는 방법은 아래와 같다 (각자의 포트넘버는 8081 ~ 808n 이다)
 
-* MSA-EZ 에서 기본 코드 생성하는 방법에 대해서는 https://www.youtube.com/watch?v=3Tn4YkqNurs과 https://www.youtube.com/watch?v=x7UxrqC02JY 를 참조한다.
+* MSA-EZ 에서 기본 코드 생성하는 방법에 대해서는 https://youtu.be/ing_t9mPGxQ 를 참조한다.
 
 ```
 cd app
@@ -688,7 +1561,7 @@ Longest transaction:	        9.20
 Shortest transaction:	        0.00
 
 ```
-- 운영시스템은 죽지 않고 지속적으로 CB 에 의하여 적절히 회로가 열림과 닫힘이 벌어지면서 자원을 보호하고 있음을 보여줌. 하지만, 63.55% 가 성공하였고, 36%가 실패했다는 것은 고객 사용성에 있어 좋지 않기 때문에 Retry 설정과 동적 Scale out (replica의 자동적 추가,HPA) 을 통하여 시스템을 확장 해주는 후속처리가 필요.
+- 운영시스템은 죽지 않고 지속적으로 CB 에 의하여 적절히 회로가 열림과 닫힘이 벌어지면서 자원을 보호하고 있음을 보여줌. 하지만, 63.55% 가 성공하였고, 46%가 실패했다는 것은 고객 사용성에 있어 좋지 않기 때문에 Retry 설정과 동적 Scale out (replica의 자동적 추가,HPA) 을 통하여 시스템을 확장 해주는 후속처리가 필요.
 
 - Retry 의 설정 (istio)
 - Availability 가 높아진 것을 확인 (siege)
@@ -794,7 +1667,7 @@ Concurrency:		       96.02
 
 # 신규 개발 조직의 추가
 
-![image](https://user-images.githubusercontent.com/487999/79684133-1d6c4300-826a-11ea-94a2-602e61814ebf.png)
+  ![image](https://user-images.githubusercontent.com/487999/79684133-1d6c4300-826a-11ea-94a2-602e61814ebf.png)
 
 
 ## 마케팅팀의 추가
@@ -802,8 +1675,7 @@ Concurrency:		       96.02
     - 구현계획 마이크로 서비스: 기존 customer 마이크로 서비스를 인수하며, 고객에 음식 및 맛집 추천 서비스 등을 제공할 예정
 
 ## 이벤트 스토밍 
-    
-![image](https://user-images.githubusercontent.com/487999/79685356-2b729180-8273-11ea-9361-a434065f2249.png)
+    ![image](https://user-images.githubusercontent.com/487999/79685356-2b729180-8273-11ea-9361-a434065f2249.png)
 
 
 ## 헥사고날 아키텍처 변화 
@@ -848,7 +1720,7 @@ Request/Response 방식으로 구현하지 않았기 때문에 서비스가 더�
     @PostPersist
     public void onPostPersist(){
 
-        /** pay 시스템이 Retire 되면 app 또한 영향을 받음
+        /**
         fooddelivery.external.결제이력 pay = new fooddelivery.external.결제이력();
         pay.setOrderId(getOrderId());
         
@@ -858,13 +1730,3 @@ Request/Response 방식으로 구현하지 않았기 때문에 서비스가 더�
         **/
     }
 ```
-
-
-### 참고 동영상
-
-#### 클러스터에 kafka 설치
-https://youtu.be/dvu5UBBohEk  
-
-#### 어플리케이션의 패키징과 클러스터 배포
-https://youtu.be/N9szX9RL6Cw  
-
