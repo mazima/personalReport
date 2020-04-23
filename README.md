@@ -73,6 +73,7 @@ http://msaez.io/#/storming/NVaFbcVDMkP3uU83TbQd72J4OqU2/mine/127842a8579e0bf47ac
  - 유저 등록 kim
 ```sh
 http http://52.141.27.38:8080/users/userCreation userName=kim
+```
  - 유저 등록 lee
 ```sh
 http http://52.141.27.38:8080/users/userCreation userName=lee
