@@ -782,7 +782,7 @@ transfer-encoding: chunked
 
 # CI/CD 실행 결과
 
-
+![image](https://user-images.githubusercontent.com/36656979/80050624-22264500-8551-11ea-8266-aa10b77aa1e9.png)
 
 ![image](https://user-images.githubusercontent.com/36656979/80050572-f86d1e00-8550-11ea-8cdc-185e88349fd8.png)
 
